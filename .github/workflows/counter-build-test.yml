@@ -1,0 +1,47 @@
+name: Counter Workflow
+run-name: ${{ github.actor }} has made changes to the counter deb package 🚀
+on: [push]
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          make build
+  Test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Test program
+        run: |
+          make test
+      
+  Package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Build Deb
+        run: |
+          make build-deb
+      - name: Upload Deb
+        uses: actions/upload-artifact@v4
+        with:
+          name: counter-v2.0.0.deb
+          path: counter-v2.0.0.deb
+
+  Lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Lint Deb
+        run: |
+          make lint-deb

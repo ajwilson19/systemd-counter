@@ -1,0 +1,49 @@
+name: Self-Hosted Deploy Workflow
+run-name: ${{ github.actor }} is deploying the package 🚀
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Build Deb
+        run: |
+          make build-deb
+          
+      - name: Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: counter-v2.0.0.deb
+          path: counter-v2.0.0.deb
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: counter-v2.0.0.deb
+          path: artifacts
+  
+      - name: Copy file via ssh key
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST  }}
+          username: ${{ secrets.USERNAME  }}
+          key: ${{  secrets.KEY }}
+          source: artifacts/counter-v2.0.0.deb
+          target: /home/awilson22
+
+      - name: Install w/ ssh
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          script: |
+            cd artifacts
+            sudo dpkg -i counter-v2.0.0.deb
+            sudo systemctl restart counter
